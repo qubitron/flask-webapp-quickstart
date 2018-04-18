@@ -2,19 +2,21 @@
 ## Prerequisites
 To complete this tutorial:
 
-- Install Git
-- Install Python
+- [Install Git](https://git-scm.com/)
+- [Install Python 3](https://www.python.org/downloads/)
+- [Install Docker Community Edition](https://www.docker.com/community-edition)
 
 ## Create app and run it locally
 
 First create a virtual environment to capture the dependencies for your app, install flask, and save the list of dependencies to a requirements.txt file.
 
-On windows:
+On Windows:
 ```
 py -3 -m venv env
 env\scripts\activate
 pip install flask
 pip freeze > requirements.txt
+deactivate
 ```
 
 On Linux/Unix/macOS:
@@ -23,6 +25,7 @@ python3 -m venv env
 env/bin/activate
 pip install flask
 pip freeze > requirements.txt
+deactivate
 ```
 
 Now let's write our app paste the following code into app.py:
@@ -67,6 +70,66 @@ Open a web browser, and navigate to the sample app at ```http://localhost:5000.`
 
 You can see the Hello World message from the sample app displayed in the page.
 
+![Flask app running locally](https://docs.microsoft.com/en-us/azure/app-service/media/app-service-web-get-started-python/localhost-hello-world-in-browser.png)
 
+In your terminal window, press Ctrl+C to exit the web server and type the following to stop and remove the container:
+```
+docker rm -f flaskapp
+```
 
-In your terminal window, press Ctrl+C to exit the web server.
+## Deploy the container to Azure
+
+Create the resource group:
+```
+az group create --name MyFlaskApp --location "West US"
+```
+
+Create a container registry:
+```
+az acr create --name <registry_name> --resource-group MyFlaskApp --location "West US" --sku Basic
+az acr update --name <registry_name> --admin-enabled true
+az acr credential show -n <registry_name>
+```
+
+You see two passwords. Make note of the user name and the first password.
+```JSON
+{
+  "passwords": [
+    {
+      "name": "password",
+      "value": "<registry_password>"
+    },
+    {
+      "name": "password2",
+      "value": "<registry_password2>"
+    }
+  ],
+  "username": "<registry_name>"
+}
+```
+
+Log in to your registry. When prompted, supply the password you retrieved.
+```bash
+docker login <registry_name>.azurecr.io -u <registry_name>
+```
+
+Push your container to the registry:
+```
+docker tag flask-postgresql-sample <registry_name>.azurecr.io/flask-postgresql-sample
+docker push <registry_name>.azurecr.io/flask-postgresql-sample
+```
+
+Create the app service plan:
+```
+az appservice plan create --name MyFlaskAppPlan --resource-group MyFlaskApp --sku Basic --is-linux
+```
+
+Create the web app:
+```
+az webapp create --name <app_name> --resource-group MyFlaskApp --plan MyFlaskAppPlan --deployment-container-image-name "<registry_name>.azurecr.io/flask-quickstart"
+```
+
+Browse to the web app:
+```
+http://<app_name>.azurewebsites.net 
+```

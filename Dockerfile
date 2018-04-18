@@ -3,8 +3,8 @@ FROM nginx:alpine
 COPY requirements.txt /
 
 RUN apk add --update python3 \
-  && python3 -m pip install -r requirements.txt \
-  && rm -rf /var/cache/apk/*
+  && python3 -m pip install --no-cache-dir -r requirements.txt \
+  && rm -rf /var/cache/apk/* 
 
 COPY app/ /app/
 WORKDIR /app
