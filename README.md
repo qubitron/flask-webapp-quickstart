@@ -2,7 +2,7 @@
 ## Prerequisites
 To complete this tutorial:
 
-- [Install Git](https://git-scm.com/)
+- [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?view=azure-cli-latest)
 - [Install Python 3](https://www.python.org/downloads/)
 - [Install Docker Community Edition](https://www.docker.com/community-edition)
 
@@ -63,7 +63,7 @@ CMD flask run -h 0.0.0.0 -p 5000
 Now build and run the docker container:
 ```
 docker build -t flask-quickstart .
-docker run -p 5000:5000 flask-quickstart
+docker run --name flaskapp -p 5000:5000 flask-quickstart
 ```
 
 Open a web browser, and navigate to the sample app at ```http://localhost:5000.```
@@ -76,6 +76,8 @@ In your terminal window, press Ctrl+C to exit the web server and type the follow
 ```
 docker rm -f flaskapp
 ```
+
+If you make code changes you can run the build and run commands above to update the container.
 
 ## Deploy the container to Azure
 
@@ -115,13 +117,13 @@ docker login <registry_name>.azurecr.io -u <registry_name>
 
 Push your container to the registry:
 ```
-docker tag flask-postgresql-sample <registry_name>.azurecr.io/flask-postgresql-sample
-docker push <registry_name>.azurecr.io/flask-postgresql-sample
+docker tag flask-quickstart <registry_name>.azurecr.io/flask-quickstart
+docker push <registry_name>.azurecr.io/flask-quickstart
 ```
 
 Create the app service plan:
 ```
-az appservice plan create --name MyFlaskAppPlan --resource-group MyFlaskApp --sku Basic --is-linux
+az appservice plan create --name MyFlaskAppPlan --resource-group MyFlaskApp --sku B1 --is-linux
 ```
 
 Create the web app:
