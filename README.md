@@ -110,7 +110,7 @@ az webapp config container set --name <app_name> --resource-group FlaskApp --doc
 Run the following command to set the port number on the site and restart it:
 ```
 az webapp config appsettings set --name <app name> --resource-group FlaskApp --settings  WEBSITES_PORT=8000
-az webapp restart --name <app name> --resource-group DockerLab
+az webapp restart --name <app name> --resource-group FlaskApp
 ```
 
 Browse to the web app at ```http://<app_name>.azurewebsites.net```
