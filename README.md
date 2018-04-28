@@ -2,33 +2,13 @@
 ## Prerequisites
 To complete this tutorial:
 
-- [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?view=azure-cli-latest)
 - [Install Python 3](https://www.python.org/downloads/)
 - [Install Docker Community Edition](https://www.docker.com/community-edition)
+- (Optional) [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?view=azure-cli-latest)
 
 ## Create app and run it locally
 
-First create a virtual environment to capture the dependencies for your app, install flask, and save the list of dependencies to a requirements.txt file.
-
-On Windows:
-```
-py -3 -m venv env
-env\scripts\activate
-pip install flask
-pip freeze > requirements.txt
-deactivate
-```
-
-On Linux/Unix/macOS:
-```
-python3 -m venv env
-env/bin/activate
-pip install flask
-pip freeze > requirements.txt
-deactivate
-```
-
-Now let's write our app paste the following code into app.py:
+First let's write our app paste the following code into ```main/app.py```:
 
 ```python
 from flask import Flask
@@ -45,51 +25,42 @@ if __name__ == '__main__':
 Now let's create a dockerfile for the app, we'll use an alpine linux container with an nginx web server.
 
 ```Dockerfile
-FROM nginx:alpine
+FROM tiangolo/uwsgi-nginx-flask:python3.6-alpine3.7
 
-COPY requirements.txt /
+ENV LISTEN_PORT=8000
+EXPOSE 8000
 
-RUN apk add --update python3 \
-  && python3 -m pip install -r requirements.txt \
-  && rm -rf /var/cache/apk/*
-
-COPY app/ /app/
-WORKDIR /app
-
-ENV FLASK_APP=app.py
-CMD flask run -h 0.0.0.0 -p 5000
+COPY /app /app
 ```
 
 Now build and run the docker container:
 ```
-docker build -t flask-quickstart .
-docker run --name flaskapp -p 5000:5000 flask-quickstart
+docker build --rm -t flask-quickstart .
+docker run --rm -it -p 8000:8000 flask-quickstart
 ```
 
-Open a web browser, and navigate to the sample app at ```http://localhost:5000.```
+Open a web browser, and navigate to the sample app at ```http://localhost:8000.```
 
 You can see the Hello World message from the sample app displayed in the page.
 
 ![Flask app running locally](https://docs.microsoft.com/en-us/azure/app-service/media/app-service-web-get-started-python/localhost-hello-world-in-browser.png)
 
-In your terminal window, press Ctrl+C to exit the web server and type the following to stop and remove the container:
-```
-docker rm -f flaskapp
-```
+In your terminal window, press Ctrl+C to exit the web server and stop the container.
 
-If you make code changes you can run the build and run commands above to update the container.
+If you make code changes you can re-run the docker build and run commands above to update the container.
 
 ## Deploy the container to Azure
 
-Create the resource group:
+For this portion of the tutorial you will need the Azure CLI. Either install it locally, or you can run commands in the browser by navigating to the [Azure Cloud Shell](https://shell.azure.com/bash).
+
+Create a resource group:
 ```
-az group create --name MyFlaskApp --location "West US"
+az group create --name FlaskApp --location "West US"
 ```
 
-Create a container registry:
+Create a container registry and retrieve the password, note that `<registry_name>` needs to be a unique name: 
 ```
-az acr create --name <registry_name> --resource-group MyFlaskApp --location "West US" --sku Basic
-az acr update --name <registry_name> --admin-enabled true
+az acr create --name <registry_name> --resource-group FlaskApp --location "West US" --sku Basic --admin-enabled true
 az acr credential show -n <registry_name>
 ```
 
@@ -110,12 +81,12 @@ You see two passwords. Make note of the user name and the first password.
 }
 ```
 
-Log in to your registry. When prompted, supply the password you retrieved.
+Log in to your registry. When prompted, supply the username and password shown above.
 ```bash
 docker login <registry_name>.azurecr.io -u <registry_name>
 ```
 
-Push your container to the registry:
+Tag your container and push it to the registry:
 ```
 docker tag flask-quickstart <registry_name>.azurecr.io/flask-quickstart
 docker push <registry_name>.azurecr.io/flask-quickstart
@@ -123,15 +94,56 @@ docker push <registry_name>.azurecr.io/flask-quickstart
 
 Create the app service plan:
 ```
-az appservice plan create --name MyFlaskAppPlan --resource-group MyFlaskApp --sku B1 --is-linux
+az appservice plan create --name FlaskAppPlan --resource-group FlaskApp --sku B1 --is-linux
 ```
 
 Create the web app:
 ```
-az webapp create --name <app_name> --resource-group MyFlaskApp --plan MyFlaskAppPlan --deployment-container-image-name "<registry_name>.azurecr.io/flask-quickstart"
+az webapp create --name <app_name> --resource-group FlaskApp --plan FlaskAppPlan --deployment-container-image-name "<registry_name>.azurecr.io/flask-quickstart"
 ```
 
-Browse to the web app:
+Configure it to pull from the registry:
 ```
-http://<app_name>.azurewebsites.net 
+az webapp config container set --name <app_name> --resource-group FlaskApp --docker-custom-image-name <registry_name>.azurecr.io/flask-quickstart --docker-registry-server-url https://<registry_name>.azurecr.io --docker-registry-server-user <registry_name> --docker-registry-server-password <registry_password>
 ```
+
+Run the following command to set the port number on the site and restart it:
+`az webapp config appsettings set --name <app name> --resource-group FlaskApp --settings  WEBSITES_PORT=8000
+az webapp restart --name <app name> --resource-group DockerLab`
+
+Browse to the web app at ```http://<app_name>.azurewebsites.net```
+
+## Install additional libraries
+
+To install additional libraries, first create a virtual environment locally, install packages and then generate a requirements.txt file.
+
+On Windows:
+```
+py -3 -m venv env
+env\scripts\activate
+pip install flask <list of other libraries>
+pip freeze > requirements.txt
+deactivate
+```
+
+On Linux/Unix/macOS:
+```
+python3 -m venv env
+env/bin/activate
+pip install flask <list of other libraries>
+pip freeze > requirements.txt
+deactivate
+```
+
+Add the following code to the dockerfile so that the additional requirements are installed:
+```
+# Install additional requirements from a requirements.txt file
+COPY requirements.txt /
+RUN pip install --no-cache-dir -U pip
+RUN pip install --no-cache-dir -r /requirements.txt
+```
+
+## Clean up
+
+To clean up your Azure resources, delete the resource group
+```az group delete --name FlaskApp```

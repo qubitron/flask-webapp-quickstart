@@ -1,13 +1,12 @@
-FROM nginx:alpine
+# Pull a pre-built alpine docker image with nginx and python3 installed
+FROM tiangolo/uwsgi-nginx-flask:python3.6-alpine3.7
 
-COPY requirements.txt /
+ENV LISTEN_PORT=8000
+EXPOSE 8000
 
-RUN apk add --update python3 \
-  && python3 -m pip install --no-cache-dir -r requirements.txt \
-  && rm -rf /var/cache/apk/* 
+COPY /app /app
 
-COPY app/ /app/
-WORKDIR /app
-
-ENV FLASK_APP=app.py
-CMD flask run -h 0.0.0.0 -p 5000
+# Uncomment to install additional requirements from a requirements.txt file
+#COPY requirements.txt /
+#RUN pip install --no-cache-dir -U pip
+#RUN pip install --no-cache-dir -r /requirements.txt
