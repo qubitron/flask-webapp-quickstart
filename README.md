@@ -22,7 +22,7 @@ if __name__ == '__main__':
   app.run()
 ```
 
-Now let's create a dockerfile for the app, we'll use an alpine linux container with an nginx web server.
+Now let's create a dockerfile for the app, we'll use an Alpine Linux container with an NGINX web server. Put the following in a file named `Dockerfile`:
 
 ```Dockerfile
 FROM tiangolo/uwsgi-nginx-flask:python3.6-alpine3.7
@@ -108,8 +108,10 @@ az webapp config container set --name <app_name> --resource-group FlaskApp --doc
 ```
 
 Run the following command to set the port number on the site and restart it:
-`az webapp config appsettings set --name <app name> --resource-group FlaskApp --settings  WEBSITES_PORT=8000
-az webapp restart --name <app name> --resource-group DockerLab`
+```
+az webapp config appsettings set --name <app name> --resource-group FlaskApp --settings  WEBSITES_PORT=8000
+az webapp restart --name <app name> --resource-group DockerLab
+```
 
 Browse to the web app at ```http://<app_name>.azurewebsites.net```
 
