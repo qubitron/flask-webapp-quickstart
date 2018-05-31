@@ -42,7 +42,7 @@ docker build --rm -t flask-quickstart .
 docker run --rm -it -p 8000:8000 flask-quickstart
 ```
 
-Open a web browser, and navigate to the sample app at ```http://localhost:8000.```
+Open a web browser, and navigate to the sample app at ```http://localhost:8000```.
 
 You can see the Hello World message from the sample app displayed in the page.
 
