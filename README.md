@@ -7,11 +7,11 @@ To complete this tutorial:
 
 - [Install Python 3](https://www.python.org/downloads/)
 - [Install Docker Community Edition](https://www.docker.com/community-edition)
-- (Optional) [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?view=azure-cli-latest)
+- (Optional) [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 
 ## Create app and run it locally
 
-First let's write our app paste the following code into ```main/app.py```:
+First create a root folder, name it e.g. ```flask-quickstart``` and create a single ```app``` folder inside the root folder. Now let's write our app, copy and paste the following code into ```app/main.py```:
 
 ```python
 from flask import Flask
@@ -25,7 +25,7 @@ if __name__ == '__main__':
   app.run()
 ```
 
-Now let's create a dockerfile for the app, we'll use an Alpine Linux container with an NGINX web server. Put the following in a file named `Dockerfile`:
+Now let's create a dockerfile for the app, we'll use an Alpine Linux container with an NGINX web server. Put the following in a file named `Dockerfile` inside of the ```flask-quickstart``` folder:
 
 ```Dockerfile
 FROM tiangolo/uwsgi-nginx-flask:python3.6-alpine3.7
@@ -54,7 +54,7 @@ If you make code changes you can re-run the docker build and run commands above 
 
 ## Deploy the container to Azure
 
-For this portion of the tutorial you will need the Azure CLI. Either install it locally, or you can run commands in the browser by navigating to the [Azure Cloud Shell](https://shell.azure.com/bash).
+For this portion of the tutorial you will need the Azure CLI. Either install it locally, or you can run commands in the browser by navigating to the [Azure Cloud Shell](https://shell.azure.com/bash). As you are running the commands below, you can view the resources being created in the Azure portal by navigating to [portal.azure.com](https://portal.azure.com).
 
 Create a resource group:
 ```
